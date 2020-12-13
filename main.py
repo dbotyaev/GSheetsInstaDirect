@@ -9,40 +9,43 @@
 В коде созданы два класса: InstagramBot для работы в браузере. GSheetsBot - для работы с Google-таблицей.
 """
 
+import os
 import time
-from datetime import datetime
 
+from loguru import logger
 from instagrambot import InstagramBot
 from gsheetsbot import GSheetsBot
 from settings.settings import INSTALOGIN, INSTAPASSWORD, URL_GSHEET, STATUS_NEW, \
     TEMPLATE_MESSAGE_START, STATUS_SEND, STATUS_USERNOTFOUND, DELAY_SEND, LIMIT_USER, RECOVERY_DATAFRAME
 
 if __name__ == '__main__':
+    # настраиваем логирование
+    path_log = os.getcwd() + f'\\logs\\debug.log'
+    logger.add(path_log, level='DEBUG', compression="zip", rotation="9:00", retention="10 days")
+
     try:
         if not RECOVERY_DATAFRAME:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Начало работы. Считывание данных из Google-таблицы.')
+            logger.info(f'Начало работы. Считывание данных из Google-таблицы.')
         gsheet = GSheetsBot(URL_GSHEET)
         if not gsheet.usernames:  # Если нет заказов для рассылки, заврешаем работу скрипта
             raise SystemExit(1)
     except Exception as ex:
-        print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-              f'Error. Возникла ошибка на этапе получения данных из Google-таблицы. {ex}')
+        logger.error(f'Error. Возникла ошибка на этапе получения данных из Google-таблицы. {ex}')
         raise SystemExit(1)
 
-    print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-          f'Открытие браузера.')
+    logger.info(f'Открытие браузера.')
     instagram = InstagramBot(INSTALOGIN, INSTAPASSWORD)
 
     try:
-        print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-              f'Переход на страницу instagram.')
+        logger.info(f'Переход на страницу instagram.')
         instagram.login_and_direct()
         time.sleep(2)
     except Exception as ex:
-        print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-              f'Error. Возникла ошибка на этапе авторизации и перехода на страницу direct. {ex}')
-        instagram.close_browser()
+        logger.error(f'Error. Возникла ошибка на этапе авторизации и перехода на страницу direct. {ex}')
+        try:
+            instagram.close_browser()
+        except Exception:
+            pass
         raise SystemExit(1)
 
     counter = 0  # счетчик лимита кол-ва аккаунтов для отправки в рамках запуска одного скрипта LIMIT_USER
@@ -50,8 +53,7 @@ if __name__ == '__main__':
         counter += 1
         messages = [TEMPLATE_MESSAGE_START]
         if username != '':
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'{username} - начата подготовка и отправка сообщений')
+            logger.info(f'{username} - начата подготовка и отправка сообщений')
             # по каждому аккаунту формируем список позиций товаров для сообщения и общую сумму за все позиции
             products, total_sum = gsheet.orders_by_status(username, STATUS_NEW)
             message_order = ''
@@ -76,25 +78,27 @@ if __name__ == '__main__':
                 break  # выходим из цикла отправки сообщений по списку аккаунтов, т.к. браузер закрыт
 
         # выводим позиции заказа
-        print(gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
-                               (gsheet.df_values['АККАУНТ'] == username)])
+        logger.debug(gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
+                                      (gsheet.df_values['АККАУНТ'] == username)])
         time.sleep(DELAY_SEND)  # пауза между отправками каждому аккаунту
         if counter >= LIMIT_USER:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Достигнут установленный лимит отправки сообщений. {LIMIT_USER}')
+            logger.info(f'Достигнут установленный лимит отправки сообщений. {LIMIT_USER}')
             break  # достигнут лимит отправки, выходим из цикла
 
     # записываем изменения статусов в Google-таблицу
     try:
         gsheet.save_df_gsheet()
     except Exception as ex:
-        print(ex)
-        instagram.close_browser()
+        logger.critical(ex)
+        try:
+            instagram.close_browser()
+        except Exception:
+            pass
         raise SystemExit(1)
 
-    print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} Завершение работы. Закрытие браузера.')
+    logger.info(f'Завершение работы. Закрытие браузера.')
 
     try:
         instagram.close_browser()
     except Exception:
-        print(instagram.browser.session_id)
+        logger.info(instagram.browser.session_id)

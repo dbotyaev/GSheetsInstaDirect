@@ -3,6 +3,7 @@ import pandas as pd
 import pygsheets
 
 from datetime import datetime
+from loguru import logger
 
 from settings.settings import NAME_WORKSHEET, SERVICE_ACCOUNT_FILE, START_ADDR, END_ADDR,\
     STATUS_NEW, RECOVERY_DATAFRAME
@@ -44,8 +45,7 @@ class GSheetsBot:
                                                             empty_value='',
                                                             value_render='FORMULA')
             else:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Запущен режим восстановления. Считывание данных из сохраненных файлов *.pkl.')
+                logger.info(f'Запущен режим восстановления. Считывание данных из сохраненных файлов *.pkl.')
                 path_pkl = os.getcwd() + '\\copy_dataframe\\'
                 self.df_values = pd.read_pickle(path_pkl + 'df_values.pkl')
                 self.df_formulas = pd.read_pickle(path_pkl + 'df_formulas.pkl')
@@ -76,19 +76,15 @@ class GSheetsBot:
             # получаем список уникальных аккаунтов со статусом НОВЫЙ
             self.usernames = pd.unique(self.df_values[self.df_values['СТАТУС'] == STATUS_NEW]['АККАУНТ']).tolist()
             if not self.usernames:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Заказы для рассылки со статусом {STATUS_NEW} отсутствуют.')
+                logger.info(f'Заказы для рассылки со статусом {STATUS_NEW} отсутствуют.')
             else:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Сформирован список аккаунтов для отправки. Общее кол-во {len(self.usernames)}.')
+                logger.info(f'Сформирован список аккаунтов для отправки. Общее кол-во {len(self.usernames)}.')
                 try:
                     self.protect_wsheet_id = set_protect_worksheet(self.worksheet.id)
-                    print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                          f'Установлена защита на лист на период работы скрипта.')
+                    logger.info(f'Установлена защита на лист на период работы скрипта.')
                 except Exception:
-                    print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                          f'NoError. Невозможно установить защиту на лист на период работы скрипта. '
-                          f'Проверьте установлена ли защита на листе.')
+                    logger.warning(f'NoError. Невозможно установить защиту на лист на период работы скрипта. '
+                                   f'Проверьте установлена ли защита на листе.')
                     self.protect_wsheet_id = 0
         except:
             raise
@@ -128,8 +124,7 @@ class GSheetsBot:
         path_pkl = os.getcwd() + '\\copy_dataframe\\'
         self.df_values.to_pickle(path_pkl+'df_values.pkl')
         self.df_formulas.to_pickle(path_pkl + 'df_formulas.pkl')
-        print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-              f'Изменения сохранены в файлы *.pkl')
+        logger.success(f'Изменения сохранены в файлы *.pkl')
 
     def save_df_gsheet(self):  # итоговое сохрание данных в Google-таблицу
         try:
@@ -140,20 +135,16 @@ class GSheetsBot:
 
             try:
                 self.worksheet.copy_to(self.google_sheet.id)
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Перед записью измененений создана копия листа с заказами в Google-таблице.')
+                logger.success(f'Перед записью измененений создана копия листа с заказами в Google-таблице.')
             except Exception:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Не удалось создать копию листа перед загрузкой измененений в Google-таблицу.'
-                      f'Продолжаем работу скрипта.')
+                logger.warning(f'Не удалось создать копию листа перед загрузкой измененений в Google-таблицу.'
+                               f'Продолжаем работу скрипта.')
 
             if self.protect_wsheet_id:
                 self.worksheet.remove_protected_range(self.protect_wsheet_id)
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Снята ранее установленная защита на лист для записи изменений в Google-таблицу.')
+                logger.success(f'Снята ранее установленная защита на лист для записи изменений в Google-таблицу.')
             else:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'NoError. Невозможно снять защиту на листе, установленную до запуска скрипта.')
+                logger.warning(f'NoError. Невозможно снять защиту на листе, установленную до запуска скрипта.')
 
             # запись данных повверх существующих значений
             self.worksheet.set_dataframe(self.df_formulas,
@@ -161,16 +152,14 @@ class GSheetsBot:
                                          copy_index=False, copy_head=True, extend=False, fit=False,
                                          escape_formulae=False,
                                          nan='')
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Зафиксированные изменения успешно записаны в Google-таблицу.')
+            logger.success(f'Зафиксированные изменения успешно записаны в Google-таблицу.')
         except:
             path_xls = os.getcwd() + '\\copy_dataframe\\' + datetime.now().strftime("%Y%m%d %H%M%S") + '.xlsx'
             self.df_values.to_excel(excel_writer=path_xls,
                                     sheet_name=datetime.now().strftime("%Y%m%d %H%M%S"),
                                     engine='xlsxwriter')
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Error. Произошла ошибка. Новые статусы в Google-таблицу не записаны.'
-                  f'Копия данных сохранена в Excel-файл в папку copy_dataframe.')
+            logger.error(f'Error. Произошла ошибка. Новые статусы в Google-таблицу не записаны.'
+                         f'Копия данных сохранена в Excel-файл в папку copy_dataframe.')
             raise
 
 

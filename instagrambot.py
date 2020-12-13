@@ -2,8 +2,7 @@ import os
 import time
 import random
 
-from datetime import datetime
-
+from loguru import logger
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
@@ -75,8 +74,7 @@ class InstagramBot:
             self.browser.find_element_by_xpath(direct_message_button).click()
             time.sleep(random.randrange(3, 5))
         else:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Error. Кнопка direct для отправки сообщений не найдена!')
+            logger.error(f'Error. Кнопка direct для отправки сообщений не найдена!')
             self.close_browser()
             raise NoSuchElementException
 
@@ -87,8 +85,7 @@ class InstagramBot:
                 self.browser.find_element_by_xpath(button_not_now).click()
                 time.sleep(random.randrange(2, 4))
             else:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Error. Не получилось отключить всплывающее окно Включить уведомления')
+                logger.error(f'Error. Не получилось отключить всплывающее окно Включить уведомления')
                 self.close_browser()
                 raise NoSuchElementException
 
@@ -102,8 +99,7 @@ class InstagramBot:
         if self.xpath_exists(button_new_message):
             self.browser.find_element_by_xpath(button_new_message).click()
         else:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Error. Отправка сообщений остановлена. Кнопка новое сообщение не найдена!')
+            logger.critical(f'Error. Отправка сообщений остановлена. Кнопка новое сообщение не найдена!')
             self.close_browser()
             return False
 
@@ -125,8 +121,8 @@ class InstagramBot:
             select_user = self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]'). \
                 find_element_by_tag_name('button').text
             if select_user != username:
-                print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                      f'Error. Получатель для отправки {username} не совпал с найденным и выбранным {select_user}')
+                logger.warning(f'Error. Получатель для отправки {username} '
+                               f'не совпал с найденным и выбранным {select_user}')
                 # закрываем окно поиска и выбора получателя
                 self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
                 time.sleep(random.randrange(1, 3))
@@ -134,7 +130,7 @@ class InstagramBot:
             # получатель найден и проверен, жмем кнопку Далее
             self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[2]/div/button').click()
         else:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} NoError. Получатель {username} не найден')
+            logger.warning(f'NoError. Получатель {username} не найден')
             # закрываем окно поиска и выбора получателя
             self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
             time.sleep(random.randrange(1, 3))
@@ -163,17 +159,14 @@ class InstagramBot:
                     time.sleep(random.randrange(2, 4))
                     text_message_area.send_keys(Keys.ENTER)
                     if not text_message_area.text:  # проверяем поле ввода после отправки
-                        print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                              f'Сообщение для {username} успешно отправлено!')
+                        logger.success(f'Сообщение для {username} успешно отправлено!')
                     time.sleep(random.randrange(2, 4))
                 else:
-                    print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                          f'Error. Ошибка при вводе текста в поле для отправки сообщения для {username}.')
+                    logger.error(f'Error. Ошибка при вводе текста в поле для отправки сообщения для {username}.')
                     self.close_browser()
                     return False
         except Exception as ex:
-            print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Error. Возникла ошибка при отправке сообщения. Отправка сообщений приостановлена.', ex)
+            logger.critical(f'Error. Возникла ошибка при отправке сообщения. Отправка сообщений приостановлена.', ex)
             self.close_browser()
             return False
         return 'message delivered'  # успешная отправка сообщения
