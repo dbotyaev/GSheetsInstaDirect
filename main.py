@@ -21,7 +21,7 @@ if __name__ == '__main__':
     try:
         if not RECOVERY_DATAFRAME:
             print(f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")} '
-                  f'Начало работы. Считывание данные из Google-таблицы.')
+                  f'Начало работы. Считывание данных из Google-таблицы.')
         gsheet = GSheetsBot(URL_GSHEET)
         if not gsheet.usernames:  # Если нет заказов для рассылки, заврешаем работу скрипта
             raise SystemExit(1)
