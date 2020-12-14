@@ -28,7 +28,8 @@ class InstagramBot:
             # self.options.add_argument('--no-sandbox')
             # self.options.add_argument('--ignore-certificate-errors')
             # self.options.add_argument('--allow-insecure-localhost')
-        self.driver_file = os.getcwd() + '/chromedriver/chromedriver.exe'  # path to ChromeDriver
+        # self.driver_file = os.getcwd() + '/chromedriver/chromedriver.exe'  # path to ChromeDriver
+        self.driver_file = os.getcwd() + '/yandexdriver/yandexdriver.exe'  # path to ChromeDriver
         self.browser = webdriver.Chrome(self.driver_file, options=self.options)
 
     # метод для закрытия браузера
@@ -67,6 +68,7 @@ class InstagramBot:
         password_input.send_keys(Keys.ENTER)
 
         time.sleep(random.randrange(3, 5))
+        time.sleep(60)  # время задержки для ввода кода подтверждения при двухфакторной авторизации
 
         # Проверяем наличие кнопки Direct и переходим на страницу отправки сообщения
         direct_message_button = '/html/body/div[1]/section/nav/div[2]/div/div/div[3]/div/div[2]/a'
