@@ -42,6 +42,7 @@ if __name__ == '__main__':
         time.sleep(2)
     except Exception as ex:
         logger.error(f'Error. Возникла ошибка на этапе авторизации и перехода на страницу direct. {ex}')
+        instagram.browser.save_screenshot(os.getcwd() + f'\\logs\\exception.png')
         try:
             instagram.close_browser()
         except Exception:
@@ -66,7 +67,12 @@ if __name__ == '__main__':
             messages.append(message_order)
 
             # отправка полученного списка сообщений каждому аккаунту
-            status_delivered = instagram.send_direct_message(username.lower(), messages)
+            try:
+                status_delivered = instagram.send_direct_message(username.lower(), messages)
+            except Exception as ex:
+                instagram.browser.save_screenshot(os.getcwd() + f'\\logs\\send_direct_message.png')
+                logger.critical(f'Возникла необработанная ошибка на этапе отправки сообщения. {ex}')
+                break
 
             if status_delivered == 'message delivered':  # сообщение успешно доставлено
                 # записать изменения в датафрейм, поменять на STATUS_SEND
@@ -75,7 +81,7 @@ if __name__ == '__main__':
                 # записать изменения в датафрейм, поменять на STATUS_USERNOTFOUND
                 gsheet.change_status_order(username, STATUS_NEW, STATUS_USERNOTFOUND)
             elif not status_delivered:  # ошибка отправки сообщения
-                break  # выходим из цикла отправки сообщений по списку аккаунтов, т.к. браузер закрыт
+                break  # выходим из цикла отправки сообщений по списку аккаунтов
 
         # выводим позиции заказа
         logger.debug(gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
@@ -89,16 +95,13 @@ if __name__ == '__main__':
     try:
         gsheet.save_df_gsheet()
     except Exception as ex:
-        logger.critical(ex)
-        try:
-            instagram.close_browser()
-        except Exception:
-            pass
-        raise SystemExit(1)
+        logger.critical(f'Не удалось записать данные в Google_таблицу. {ex}'
+                        f'Следующий запуск скрипта рекомендуется с параметром RECOVERY_DATAFRAME = 1')
 
     logger.info(f'Завершение работы. Закрытие браузера.')
 
     try:
         instagram.close_browser()
     except Exception:
+        instagram.browser.save_screenshot(os.getcwd() + f'\\logs\\exception.png')
         logger.info(instagram.browser.session_id)

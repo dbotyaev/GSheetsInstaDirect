@@ -18,6 +18,8 @@ class InstagramBot:
         self.username = username
         self.password = password
         self.options = webdriver.ChromeOptions()
+        # mobile_emulation = {"deviceName": "Nexus 5"}
+        # self.options.add_experimental_option("mobileEmulation", mobile_emulation)
         if BROWSER_MODE == 'PROFILE':  # режим авторизации из профиля браузера
             self.options.add_argument("--user-data-dir="
                                       "C:\\Users\\dboty\\AppData\\Local\\Yandex\\YandexBrowser\\User Data\\Instagram")
@@ -35,7 +37,7 @@ class InstagramBot:
             # self.options.add_argument('--ignore-certificate-errors')
             # self.options.add_argument('--allow-insecure-localhost')
         # self.driver_file = os.getcwd() + '/chromedriver/chromedriver.exe'  # path to ChromeDriver
-        self.driver_file = os.getcwd() + '/yandexdriver/yandexdriver.exe'  # path to ChromeDriver
+        self.driver_file = os.getcwd() + f'\\yandexdriver\\yandexdriver.exe'  # path to ChromeDriver
         self.browser = webdriver.Chrome(self.driver_file, options=self.options)
 
         time.sleep(5)  # после открытия браузера
@@ -121,6 +123,8 @@ class InstagramBot:
             if not button_direct():
                 raise NoSuchElementException
 
+            time.sleep(random.randrange(3, 5))
+
             # Отключаем всплывающее окно "Включить уведомления"
             if not enable_notifications('/html/body/div[5]/div/div/div/div[3]/button[2]'):
                 raise NoSuchElementException
@@ -171,7 +175,7 @@ class InstagramBot:
             self.browser.find_element_by_xpath(button_new_message).click()
         else:
             logger.critical(f'Error. Отправка сообщений остановлена. Кнопка новое сообщение не найдена!')
-            self.close_browser()
+            self.browser.save_screenshot(os.getcwd() + f'\\logs\\send_direct_message.png')
             return False
 
         time.sleep(random.randrange(1, 3))
@@ -203,6 +207,7 @@ class InstagramBot:
             # получатель найден и проверен, жмем кнопку Далее
             self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[2]/div/button').click()
         else:
+            # никакой получатель не найден
             logger.warning(f'NoError. Получатель {username} не найден')
             # закрываем окно поиска и выбора получателя
             self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
@@ -211,8 +216,22 @@ class InstagramBot:
 
         time.sleep(random.randrange(3, 5))
 
-        # вводим сообщение и отправляем получателю
         try:
+            # проверяем наличие запроса на разрешение отправки сообщения от аккаунта
+            button_accept = '/html/body/div[1]/section/' \
+                            'div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div[5]/button'
+            if self.xpath_exists(button_accept):  # запрос есть
+                logger.info(f'Требуется разрешение для отправки сообщения от {username}.')
+                self.browser.find_element_by_xpath(button_accept).click()  # нажимаем кнопку "Принять"
+                time.sleep(random.randrange(2, 4))
+                # проверяем наличие всплывающего окна с выбором папки для сообщений
+                button_main_folder = '/html/body/div[5]/div/div/div/div[2]/button[1]'
+                if self.xpath_exists(button_main_folder):  # всплывающее окно есть
+                    self.browser.find_element_by_xpath(button_main_folder).click()  # выбираем папку сообщений"Основные"
+                    logger.info(f'Выбрана папка для сообщений от {username}.')
+                    time.sleep(5)
+
+            # вводим сообщение и отправляем получателю
             text_message_area = self.browser.find_element_by_xpath(
                 "/html/body/div[1]/section/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div/div[2]/textarea")
             text_message_area.clear()
@@ -237,11 +256,10 @@ class InstagramBot:
                     time.sleep(random.randrange(2, 4))
                 else:
                     logger.error(f'Error. Ошибка при вводе текста в поле для отправки сообщения для {username}.')
-                    self.close_browser()
                     return False
         except Exception as ex:
             logger.critical(f'Error. Возникла ошибка при отправке сообщения. Отправка сообщений приостановлена.', ex)
-            self.close_browser()
+            self.browser.save_screenshot(os.getcwd() + f'\\logs\\send_direct_message.png')
             return False
         # сохранение cookies в файл после успешной отправки сообщений аккаунту
         if BROWSER_MODE == 'COOKIES':
