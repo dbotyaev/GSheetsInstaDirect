@@ -71,7 +71,7 @@ if __name__ == '__main__':
                 status_delivered = instagram.send_direct_message(username.lower(), messages)
             except Exception as ex:
                 instagram.browser.save_screenshot(os.getcwd() + f'\\logs\\send_direct_message.png')
-                logger.critical(f'Возникла необработанная ошибка на этапе отправки сообщения. {ex}')
+                logger.critical(f'Error. Возникла необработанная ошибка на этапе отправки сообщения. {ex}')
                 break
 
             if status_delivered == 'message delivered':  # сообщение успешно доставлено
@@ -84,8 +84,10 @@ if __name__ == '__main__':
                 break  # выходим из цикла отправки сообщений по списку аккаунтов
 
         # выводим позиции заказа
-        logger.debug(gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
-                                      (gsheet.df_values['АККАУНТ'] == username)])
+        df_order_log = gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) & (gsheet.df_values['АККАУНТ'] == username)]
+        logger.debug(f'\n'
+                     f'{df_order_log}')
+
         time.sleep(DELAY_SEND)  # пауза между отправками каждому аккаунту
         if counter >= LIMIT_USER:
             logger.info(f'Достигнут установленный лимит отправки сообщений. {LIMIT_USER}')
@@ -95,7 +97,7 @@ if __name__ == '__main__':
     try:
         gsheet.save_df_gsheet()
     except Exception as ex:
-        logger.critical(f'Не удалось записать данные в Google_таблицу. {ex}'
+        logger.critical(f'Error. Не удалось записать данные в Google_таблицу. {ex}'
                         f'Следующий запуск скрипта рекомендуется с параметром RECOVERY_DATAFRAME = 1')
 
     logger.info(f'Завершение работы. Закрытие браузера.')
