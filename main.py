@@ -84,7 +84,8 @@ if __name__ == '__main__':
                 break  # выходим из цикла отправки сообщений по списку аккаунтов
 
         # выводим позиции заказа
-        df_order_log = gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) & (gsheet.df_values['АККАУНТ'] == username)]
+        df_order_log = gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
+                                        (gsheet.df_values['АККАУНТ'] == username)]
         logger.debug(f'\n'
                      f'{df_order_log}')
 

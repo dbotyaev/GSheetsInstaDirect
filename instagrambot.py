@@ -18,6 +18,9 @@ class InstagramBot:
         self.username = username
         self.password = password
         self.options = webdriver.ChromeOptions()
+        # отключение режима Webdriver
+        # for ChromeDriver version 79.0.3945.16 or over
+        self.options.add_argument("--disable-blink-features=AutomationControlled")
         # mobile_emulation = {"deviceName": "Nexus 5"}
         # self.options.add_experimental_option("mobileEmulation", mobile_emulation)
         if BROWSER_MODE == 'PROFILE':  # режим авторизации из профиля браузера
@@ -97,6 +100,8 @@ class InstagramBot:
                     return False
 
         self.browser.get('https://www.instagram.com')
+        # страница проверки отключения режима Webdriver для тестирования
+        # self.browser.get('https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html')
         self.browser.set_window_size(768, 704)
 
         time.sleep(random.randrange(3, 5))
@@ -270,4 +275,5 @@ class InstagramBot:
 
 if __name__ == '__main__':
     # instagram = InstagramBot('username', 'password')
+    # instagram.login_and_direct()
     pass
