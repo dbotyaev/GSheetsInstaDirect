@@ -21,6 +21,12 @@ class InstagramBot:
         # отключение режима Webdriver
         # for ChromeDriver version 79.0.3945.16 or over
         self.options.add_argument("--disable-blink-features=AutomationControlled")
+        self.options.add_argument(
+            f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+            f'Chrome/87.0.4280.141 YaBrowser/20.12.3.140 Yowser/2.5 Safari/537.36'
+            # f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
+            # f' Chrome/87.0.4280.88 Safari/537.36'
+        )
         # mobile_emulation = {"deviceName": "Nexus 5"}
         # self.options.add_experimental_option("mobileEmulation", mobile_emulation)
         if BROWSER_MODE == 'PROFILE':  # режим авторизации из профиля браузера
@@ -87,17 +93,16 @@ class InstagramBot:
 
         # Отключаем всплывающее окно "Включить уведомления"
         def enable_notifications(button_not_now):
+            logger.info(f'Проверка появления всплывающего окна Включить уведомления и попытка его отключить')
             if not HEADLESS:  # в режиме HEADLESS окно "Включить уведомления" не появлется
                 # Отключаем всплывающее окно "Включить уведомления"
-                #                  '/html/body/div[4]/div/div/div/div[3]/button[2]'
-                # button_not_now = '/html/body/div[5]/div/div/div/div[3]/button[2]'
                 if self.xpath_exists(button_not_now):
                     self.browser.find_element_by_xpath(button_not_now).click()
                     time.sleep(random.randrange(2, 4))
-                    return True
+                    return
                 else:
-                    logger.error(f'Error. Не получилось отключить всплывающее окно Включить уведомления')
-                    return False
+                    # logger.debug(f'Не получилось отключить всплывающее окно Включить уведомления или его не было')
+                    return
 
         self.browser.get('https://www.instagram.com')
         # страница проверки отключения режима Webdriver для тестирования
@@ -124,15 +129,21 @@ class InstagramBot:
 
             time.sleep(60)  # время задержки для ввода кода подтверждения при двухфакторной авторизации
 
+            # Попытка Отключить всплывающее окно "Включить уведомления", если оно появится
+            # '/html/body/div[5]/div/div/div/div[3]/button[2]' предыдущая версия
+            enable_notifications('/html/body/div[4]/div/div/div/div[3]/button[2]')
+
+            time.sleep(random.randrange(1, 2))
+
             # Проверяем наличие кнопки Direct и переходим на страницу отправки сообщения
             if not button_direct():
                 raise NoSuchElementException
 
             time.sleep(random.randrange(3, 5))
 
-            # Отключаем всплывающее окно "Включить уведомления"
-            if not enable_notifications('/html/body/div[5]/div/div/div/div[3]/button[2]'):
-                raise NoSuchElementException
+            # Попытка Отключить всплывающее окно "Включить уведомления", если оно появится
+            # '/html/body/div[5]/div/div/div/div[3]/button[2]' предыдущая версия
+            enable_notifications('/html/body/div[4]/div/div/div/div[3]/button[2]')
 
             # сохранение cookies в файл после успешной авторизации
             if BROWSER_MODE == 'COOKIES':
@@ -150,13 +161,19 @@ class InstagramBot:
 
             time.sleep(random.randrange(3, 5))
 
-            # Отключаем всплывающее окно "Включить уведомления"
-            if not enable_notifications('/html/body/div[4]/div/div/div/div[3]/button[2]'):
-                raise NoSuchElementException
+            # Попытка отключить всплывающее окно "Включить уведомления", если оно появится
+            enable_notifications('/html/body/div[4]/div/div/div/div[3]/button[2]')
+
+            time.sleep(1)
 
             # Проверяем наличие кнопки Direct и переходим на страницу отправки сообщения
             if not button_direct():
                 raise NoSuchElementException
+
+            time.sleep(1)
+
+            # Попытка отключить всплывающее окно "Включить уведомления", если оно появится
+            enable_notifications('/html/body/div[4]/div/div/div/div[3]/button[2]')
 
             # сохранение cookies в файл после успешной авторизации
             self.save_cookies()
@@ -190,32 +207,40 @@ class InstagramBot:
         to_name_input.clear()
         to_name_input.send_keys(username)
 
-        time.sleep(random.randrange(3, 5))
+        time.sleep(random.randrange(3, 4))
 
         # выбираем получателя из найденного списка и жмем кнопку "Далее"
-        button_select_user = '/html/body/div[5]/div/div/div[2]/div[2]/div[1]/div/div[3]/button'
+        # '/html/body/div[5]/div/div/div[2]/div[2]/div[1]/div/div[3]/button' предыдущая версия
+        button_select_user = '/html/body/div[4]/div/div/div[2]/div[2]/div[1]/div/div[3]/button'
+
         if self.xpath_exists(button_select_user):
             self.browser.find_element_by_xpath(button_select_user).click()
             time.sleep(random.randrange(3, 5))
 
             # проверка получателя для отправки с найденным и выбранным
-            select_user = self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]'). \
+            # '/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]' предыдущая версия
+            select_user = self.browser.find_element_by_xpath(
+                '/html/body/div[4]/div/div/div[2]/div[1]/div/div[2]/div[1]'). \
                 find_element_by_tag_name('button').text
+
             if select_user != username:
                 logger.warning(f'Error. Получатель для отправки {username} '
                                f'не совпал с найденным и выбранным {select_user}')
                 # закрываем окно поиска и выбора получателя
-                self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
+                # '/html/body/div[5]/div/div/div[1]/div/div[1]/div/button' предыдущая версия
+                self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[1]/div/button').click()
                 time.sleep(random.randrange(1, 3))
                 return 'username not found'  # для изменения статуса на Аккаунт не найден
 
             # получатель найден и проверен, жмем кнопку Далее
-            self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[2]/div/button').click()
+            # '/html/body/div[5]/div/div/div[1]/div/div[2]/div/button' предыдущая версия
+            self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[2]/div/button').click()
         else:
             # никакой получатель не найден
             logger.warning(f'NoError. Получатель {username} не найден')
             # закрываем окно поиска и выбора получателя
-            self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
+            # '/html/body/div[5]/div/div/div[1]/div/div[1]/div/button' предыдущая версия
+            self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[1]/div/button').click()
             time.sleep(random.randrange(1, 3))
             return 'username not found'  # для изменения статуса на Аккаунт не найден
 
