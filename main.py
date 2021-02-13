@@ -75,6 +75,11 @@ if __name__ == '__main__':
                 break
 
             if status_delivered == 'message delivered':  # сообщение успешно доставлено
+                # выводим позиции заказа
+                df_order_log = gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_NEW) &
+                                                (gsheet.df_values['АККАУНТ'] == username)]
+                logger.debug(f'\n'
+                             f'{df_order_log}')
                 # записать изменения в датафрейм, поменять на STATUS_SEND
                 gsheet.change_status_order(username, STATUS_NEW, STATUS_SEND)
             elif status_delivered == 'username not found':  # аккаунт с заданным именем не найден
@@ -82,12 +87,6 @@ if __name__ == '__main__':
                 gsheet.change_status_order(username, STATUS_NEW, STATUS_USERNOTFOUND)
             elif not status_delivered:  # ошибка отправки сообщения
                 break  # выходим из цикла отправки сообщений по списку аккаунтов
-
-        # выводим позиции заказа
-        df_order_log = gsheet.df_values[(gsheet.df_values['СТАТУС'] == STATUS_SEND) &
-                                        (gsheet.df_values['АККАУНТ'] == username)]
-        logger.debug(f'\n'
-                     f'{df_order_log}')
 
         time.sleep(DELAY_SEND)  # пауза между отправками каждому аккаунту
         if counter >= LIMIT_USER:

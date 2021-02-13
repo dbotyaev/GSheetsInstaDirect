@@ -20,7 +20,7 @@ class InstagramBot:
         self.options = webdriver.ChromeOptions()
         # отключение режима Webdriver
         # for ChromeDriver version 79.0.3945.16 or over
-        self.options.add_argument("--disable-blink-features=AutomationControlled")
+        # self.options.add_argument("--disable-blink-features=AutomationControlled")
         self.options.add_argument(
             f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
             f'Chrome/87.0.4280.141 YaBrowser/20.12.3.140 Yowser/2.5 Safari/537.36'
@@ -107,6 +107,7 @@ class InstagramBot:
         self.browser.get('https://www.instagram.com')
         # страница проверки отключения режима Webdriver для тестирования
         # self.browser.get('https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html')
+        # self.browser.get('https://bot.sannysoft.com/')
         self.browser.set_window_size(768, 704)
 
         time.sleep(random.randrange(3, 5))
@@ -248,6 +249,8 @@ class InstagramBot:
 
         try:
             # проверяем наличие запроса на разрешение отправки сообщения от аккаунта
+            # button_accept = '/html/body/div[1]/section/' \
+            #                 'div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div[5]/button'
             button_accept = '/html/body/div[1]/section/' \
                             'div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div[5]/button'
             if self.xpath_exists(button_accept):  # запрос есть
@@ -255,7 +258,8 @@ class InstagramBot:
                 self.browser.find_element_by_xpath(button_accept).click()  # нажимаем кнопку "Принять"
                 time.sleep(random.randrange(2, 4))
                 # проверяем наличие всплывающего окна с выбором папки для сообщений
-                button_main_folder = '/html/body/div[5]/div/div/div/div[2]/button[1]'
+                # button_main_folder = '/html/body/div[5]/div/div/div/div[2]/button[1]'
+                button_main_folder = '/html/body/div[4]/div/div/div/div[2]/button[1]'
                 if self.xpath_exists(button_main_folder):  # всплывающее окно есть
                     self.browser.find_element_by_xpath(button_main_folder).click()  # выбираем папку сообщений"Основные"
                     logger.info(f'Выбрана папка для сообщений от {username}.')
