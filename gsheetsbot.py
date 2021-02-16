@@ -86,7 +86,7 @@ class GSheetsBot:
                     logger.warning(f'NoError. Невозможно установить защиту на лист на период работы скрипта. '
                                    f'Проверьте установлена ли защита на листе.')
                     self.protect_wsheet_id = 0
-        except:
+        except Exception:
             raise
 
     def orders_by_status(self, username, status):
@@ -135,16 +135,16 @@ class GSheetsBot:
 
             try:
                 self.worksheet.copy_to(self.google_sheet.id)
-                logger.success(f'Перед записью измененений создана копия листа с заказами в Google-таблице.')
+                logger.success(f'Перед записью измененений создана копия листа с заказами в Google-таблице')
             except Exception:
-                logger.warning(f'Не удалось создать копию листа перед загрузкой измененений в Google-таблицу.'
-                               f'Продолжаем работу скрипта.')
+                logger.warning(f'Не удалось создать копию листа перед загрузкой измененений в Google-таблицу'
+                               f'Продолжаем работу скрипта')
 
             if self.protect_wsheet_id:
                 self.worksheet.remove_protected_range(self.protect_wsheet_id)
-                logger.success(f'Снята ранее установленная защита на лист для записи изменений в Google-таблицу.')
+                logger.success(f'Снята ранее установленная защита на лист для записи изменений в Google-таблицу')
             else:
-                logger.warning(f'NoError. Невозможно снять защиту на листе, установленную до запуска скрипта.')
+                logger.warning(f'Невозможно снять защиту на листе, установленную до запуска скрипта')
 
             # запись данных повверх существующих значений
             self.worksheet.set_dataframe(self.df_formulas,
@@ -158,7 +158,7 @@ class GSheetsBot:
             self.df_values.to_excel(excel_writer=path_xls,
                                     sheet_name=datetime.now().strftime("%Y%m%d %H%M%S"),
                                     engine='xlsxwriter')
-            logger.error(f'Error. Произошла ошибка. Новые статусы в Google-таблицу не записаны.'
+            logger.error(f'Error. Произошла ошибка. Новые данные в Google-таблицу не записаны.'
                          f'Копия данных сохранена в Excel-файл в папку copy_dataframe.')
             raise
 
