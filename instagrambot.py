@@ -249,6 +249,8 @@ class InstagramBot:
 
         time.sleep(random.randrange(3, 5))
 
+        time.sleep(600)
+
         try:
             # проверяем наличие запроса на разрешение отправки сообщения от аккаунта
             button_accept = '/html/body/div[1]/section/' \
@@ -258,8 +260,8 @@ class InstagramBot:
                 self.browser.find_element_by_xpath(button_accept).click()  # нажимаем кнопку "Принять"
                 time.sleep(random.randrange(2, 4))
                 # проверяем наличие всплывающего окна с выбором папки для сообщений
-                # button_main_folder = '/html/body/div[5]/div/div/div/div[2]/button[1]'
-                button_main_folder = '/html/body/div[4]/div/div/div/div[2]/button[1]'
+                # button_main_folder = '/html/body/div[4]/div/div/div/div[2]/button[1]'
+                button_main_folder = '/html/body/div[5]/div/div/div/div[2]/button[1]'
                 if self.xpath_exists(button_main_folder):  # всплывающее окно есть
                     self.browser.find_element_by_xpath(button_main_folder).click()  # выбираем папку сообщений"Основные"
                     logger.info(f'Выбрана папка для сообщений от {username}.')
