@@ -106,7 +106,7 @@ def _get_orders_from_comments():
                 date_post = datetime.fromtimestamp(comment['created_at']).strftime('%d.%m.%Y %H:%M:%S')
                 account = comment['user']['username'].upper()
                 # пропускаем комментарии основного аккаунта
-                if account == INSTALOGIN:
+                if account.lower() == INSTALOGIN:
                     continue
                 text_comment = comment['text']  # комментарий
                 try:
@@ -140,6 +140,8 @@ def _set_new_price():
     """
     # удаляем строки, где НАИМЕНОВАНИЕ = NaN и ЦЕНА = NaN
     gsheets_price.df_values.dropna(subset=['НАИМЕНОВАНИЕ', 'ЦЕНА'], how='all', inplace=True)
+    # заменяем все NaN в столбце цена на 0
+    gsheets_price.df_values['ЦЕНА'].fillna(0, inplace=True)
 
     price_for_append = []  # список новых позиций для прайс-листа
 
