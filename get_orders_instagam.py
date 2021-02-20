@@ -9,7 +9,6 @@
 Комментарии необходимо сгруппировать по ароматам и добавить в таблицу на лист Заказы.
 """
 import csv
-import json
 import os
 import pandas as pd
 import pickle
@@ -23,8 +22,6 @@ import time
 from datetime import datetime
 from instabot import Bot
 from loguru import logger
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 
 from instagrambot import InstagramBot
@@ -56,7 +53,6 @@ def _parsing_post_json(data_json):
     :return: список словарей данных поста
     """
     result_list = []
-    result_dict = {}
     for data in data_json:
         result_dict = {
             'media_id': data['media']['caption']['media_id'],
@@ -95,11 +91,11 @@ def _get_orders_from_comments():
     result_orders = []
     try:
         for post in instagram.result_parsing_posts:
-            ogger.debug(f'Пауза между запросами')
+            logger.debug(f'Пауза между запросами')
             time.sleep(random.randrange(15, 30))  # задержка между получением комментариев поста
 
             media_id = post['media_id']  # идентификатор поста
-            aromat_parfum = post['name_parfum']
+            aromat_parfum = post['name_parfum'].upper()
             url_post = f'https://www.instagram.com/p/{post["code_url"]}'
             logger.info(f'Получаем комментарии "{aromat_parfum}" {url_post}')
             comments_post = comments_bot.get_media_comments_all(media_id)  # получение всех комментарием поста
@@ -108,7 +104,7 @@ def _get_orders_from_comments():
             count_comments = 0  # счетчик комментариев
             for comment in comments_post:
                 date_post = datetime.fromtimestamp(comment['created_at']).strftime('%d.%m.%Y %H:%M:%S')
-                account = comment['user']['username']
+                account = comment['user']['username'].upper()
                 # пропускаем комментарии основного аккаунта
                 if account == INSTALOGIN:
                     continue
@@ -446,7 +442,7 @@ class GSheetsOrdersPrice(GSheetsBot):
                                         escape_formulae=False,
                                         nan='')
             # устанавливаем ширину столбцов
-            new_worksheet.adjust_column_width(start=1, end=1, pixel_size=140)
+            new_worksheet.adjust_column_width(start=1, end=1, pixel_size=190)
             new_worksheet.adjust_column_width(start=2, end=2, pixel_size=240)
             new_worksheet.adjust_column_width(start=3, end=3, pixel_size=60)
             new_worksheet.adjust_column_width(start=4, end=4, pixel_size=270)
@@ -552,7 +548,7 @@ if __name__ == '__main__':
     # сортируем датафрейм на месте по значениям в указанных столбцах
     df_new_orders.sort_values(by=['АРОМАТ', 'АККАУНТ'], inplace=True)
     # генерируем имя листа
-    title = datetime.now().strftime("%Y%m%d %H%M")
+    title = f'comments{datetime.now().strftime("%Y%m%d%H%M")}'
     try:
         gsheets_price.save_new_worksheet(df_data_values=df_new_orders, title_worksheet=title)
         logger.success(f'Комментарии и новые заказы успешно сохранены на лист {title}')
