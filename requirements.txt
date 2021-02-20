@@ -32,3 +32,4 @@ urllib3==1.26.2
 XlsxWriter==1.3.7
 loguru~=0.5.3
 fuzzywuzzy~=0.18.0
+instabot~=0.117.0

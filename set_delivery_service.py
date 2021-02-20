@@ -196,17 +196,17 @@ def set_delivery_service():
 
             # НАЧАЛО БЛОКА - ИСПОЛЬЗОВАНИЕ МОЖЕТ ПРИВЕСТИ К НЕПРАВИЛЬНЫМ РЕЗУЛЬТАТАМ
             # если уровень совпадения соответствует параметру LEVEL_MATCH, записываем изменения в датафрейм
-            if result_fuzz_one[1] >= LEVEL_MATCH:
-                # получаем индекс в списке аккаунтов Google-таблицы приведенном к lower()
-                # и по индеку находим неизменный объект для передачи в функцию записи данных
-                index = gsheet_accounts.index(result_fuzz_one[0])
-                username = gsheet.usernames[index]
-                logger.warning(f'Уровень похожести составил {result_fuzz_one[1]} с аккаунтом {username}')
-                logger.warning(f'Записываем изменения для Google-таблицы на аккаунт {username}')
-                # записываем изменения в датафрейм для выгрузки в Google-таблицу
-                gsheet.change_status_delivery(user=username, delivery=delivery_service)
-            else:
-                logger.critical(f'Уровень похожести ниже установленного уровня. Данные не будут записаны')
+            # if result_fuzz_one[1] >= LEVEL_MATCH:
+            #     # получаем индекс в списке аккаунтов Google-таблицы приведенном к lower()
+            #     # и по индеку находим неизменный объект для передачи в функцию записи данных
+            #     index = gsheet_accounts.index(result_fuzz_one[0])
+            #     username = gsheet.usernames[index]
+            #     logger.warning(f'Уровень похожести составил {result_fuzz_one[1]} с аккаунтом {username}')
+            #     logger.warning(f'Записываем изменения для Google-таблицы на аккаунт {username}')
+            #     # записываем изменения в датафрейм для выгрузки в Google-таблицу
+            #     gsheet.change_status_delivery(user=username, delivery=delivery_service)
+            # else:
+            #     logger.critical(f'Уровень похожести ниже установленного уровня. Данные не будут записаны')
             # КОНЕЦ БЛОКА
 
             # получаем ID оригинального nickname_orig в датафрейме уникальных аккаунтов из Excel-файла
