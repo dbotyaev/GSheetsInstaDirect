@@ -22,8 +22,10 @@ class InstagramBot:
         # for ChromeDriver version 79.0.3945.16 or over
         # self.options.add_argument("--disable-blink-features=AutomationControlled")
         self.options.add_argument(
+            # f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+            # f'Chrome/87.0.4280.141 YaBrowser/20.12.3.140 Yowser/2.5 Safari/537.36'
             f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-            f'Chrome/87.0.4280.141 YaBrowser/20.12.3.140 Yowser/2.5 Safari/537.36'
+            f'Chrome/88.0.4324.111 YaBrowser/21.2.1.107 Yowser/2.5 Safari/537.36'
             # f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
             # f' Chrome/87.0.4280.88 Safari/537.36'
         )
@@ -211,37 +213,37 @@ class InstagramBot:
         time.sleep(random.randrange(3, 4))
 
         # выбираем получателя из найденного списка и жмем кнопку "Далее"
-        # '/html/body/div[5]/div/div/div[2]/div[2]/div[1]/div/div[3]/button' предыдущая версия
-        button_select_user = '/html/body/div[4]/div/div/div[2]/div[2]/div[1]/div/div[3]/button'
+        # '/html/body/div[4]/div/div/div[2]/div[2]/div[1]/div/div[3]/button' предыдущая версия
+        button_select_user = '/html/body/div[5]/div/div/div[2]/div[2]/div[1]/div/div[3]/button'
 
         if self.xpath_exists(button_select_user):
             self.browser.find_element_by_xpath(button_select_user).click()
             time.sleep(random.randrange(3, 5))
 
             # проверка получателя для отправки с найденным и выбранным
-            # '/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]' предыдущая версия
+
+            # '/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]' предыдущии версии
+            # '/html/body/div[4]/div/div/div[2]/div[1]/div/div[2]/div[1]'
             select_user = self.browser.find_element_by_xpath(
-                '/html/body/div[4]/div/div/div[2]/div[1]/div/div[2]/div[1]'). \
+                '/html/body/div[5]/div/div/div[2]/div[1]/div/div[2]/div[1]'). \
                 find_element_by_tag_name('button').text
 
             if select_user != username:
                 logger.warning(f'Error. Получатель для отправки {username} '
                                f'не совпал с найденным и выбранным {select_user}')
                 # закрываем окно поиска и выбора получателя
-                # '/html/body/div[5]/div/div/div[1]/div/div[1]/div/button' предыдущая версия
-                self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[1]/div/button').click()
+                self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
                 time.sleep(random.randrange(1, 3))
                 return 'username not found'  # для изменения статуса на Аккаунт не найден
 
             # получатель найден и проверен, жмем кнопку Далее
-            # '/html/body/div[5]/div/div/div[1]/div/div[2]/div/button' предыдущая версия
-            self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[2]/div/button').click()
+            # '/html/body/div[4]/div/div/div[1]/div/div[2]/div/button' предыдущая версия
+            self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[2]/div/button').click()
         else:
             # никакой получатель не найден
             logger.warning(f'NoError. Получатель {username} не найден')
             # закрываем окно поиска и выбора получателя
-            # '/html/body/div[5]/div/div/div[1]/div/div[1]/div/button' предыдущая версия
-            self.browser.find_element_by_xpath('/html/body/div[4]/div/div/div[1]/div/div[1]/div/button').click()
+            self.browser.find_element_by_xpath('/html/body/div[5]/div/div/div[1]/div/div[1]/div/button').click()
             time.sleep(random.randrange(1, 3))
             return 'username not found'  # для изменения статуса на Аккаунт не найден
 
@@ -249,8 +251,6 @@ class InstagramBot:
 
         try:
             # проверяем наличие запроса на разрешение отправки сообщения от аккаунта
-            # button_accept = '/html/body/div[1]/section/' \
-            #                 'div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div[5]/button'
             button_accept = '/html/body/div[1]/section/' \
                             'div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div[5]/button'
             if self.xpath_exists(button_accept):  # запрос есть
