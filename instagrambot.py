@@ -249,8 +249,6 @@ class InstagramBot:
 
         time.sleep(random.randrange(3, 5))
 
-        time.sleep(600)
-
         try:
             # проверяем наличие запроса на разрешение отправки сообщения от аккаунта
             button_accept = '/html/body/div[1]/section/' \
