@@ -81,7 +81,11 @@ def _parsing_text_post(text):
         str_price = text[i:ind_n]  # ожидаем получение вот такой строки, например, '*2,5 мл - 300₽ + 50₽ атомайзер'
         # получаем объем, например, '2,5'
         volume = re.search('\*\d+[.,]?\d?', str_price).group(0)[1:].strip().replace('.', ',')
-        price = re.search('\d+₽', str_price).group(0)[:-1]  # получаем цену, например, '300'
+        # price = re.search('\d+₽', str_price).group(0)[:-1]  # получаем цену, например, '300'
+        price_iter = re.finditer('\d+₽', str_price)  # получаем итератор всех значений по шаблону
+        price = float(price_iter.__next__().group(0)[:-1])  # # получаем основную цену, например, '300'
+        price_atomaizer = float(price_iter.__next__().group(0)[:-1]) # получаем цену атомайзера, '50'
+        price += price_atomaizer
         result_price.append([f'{name_parfum} {volume}', price])
     # name_parfum возвращаем, чтобы добавить данные в result_parsing_posts для парсинга комментариев
     return result_price, name_parfum
